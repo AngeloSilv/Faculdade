@@ -1,0 +1,142 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+// Definição de constantes para preços fixos
+#define PRECO_QUENTINHA 20.50
+#define MIN_PESO_REFEICAO 0.4
+#define MAX_PESO_REFEICAO 2.5
+#define MIN_VENDAS_DIARIAS 100
+#define MAX_VENDAS_DIARIAS 200
+
+// Enumeração para os tipos de venda
+typedef enum {
+    REFEICAO, QUENTINHA, BEBIDA
+} TipoVenda;
+
+// Estrutura para representar uma venda
+typedef struct {
+    TipoVenda tipo;
+    double peso; // Peso da refeição, se aplicável
+    double preco; // Preço do item ou bebida
+    int quantidade; // Quantidade, se for bebida ou quentinha
+} Venda;
+
+// Protótipos de funções
+void registrarVendasDiarias(Venda vendas[], int totalVendas, double precoRefeicao, int qtdRefris, int qtdQuentinhas);
+void relatorioDiario(Venda vendas[], int totalVendas);
+void relatorioMensal(double totalMensal[]);
+void ordenarDecrescente(double totalAnual[], int tamanho);
+double gerarPesoAleatorio(double min, double max);
+
+int main() {
+    srand(time(NULL)); // Inicialização do gerador de números aleatórios
+
+    // Array para armazenar o total de vendas mensais
+    double totalVendasMensais[12] = {0};
+
+    for(int mes = 0; mes < 12; mes++) {
+        // Variáveis para armazenar o número de refrigerantes e quentinhas vendidos
+        int qtdRefris, qtdQuentinhas;
+
+        // Variável para armazenar o preço por quilo da refeição
+        double precoRefeicao;
+        printf("Informe o preço por quilo da refeição para o mês %d: ", mes + 1);
+        scanf("%lf", &precoRefeicao);
+
+        printf("Informe a quantidade de refrigerantes( R$ 3,00) vendidos no mês %d: ", mes + 1);
+        scanf("%d", &qtdRefris);
+
+        printf("Informe a quantidade de quentinhas( R$ 20,50) vendidas no mês %d: ", mes + 1);
+        scanf("%d", &qtdQuentinhas);
+
+        // Geração aleatória do número de vendas diárias
+        int vendasDiarias = gerarNumeroAleatorio(MIN_VENDAS_DIARIAS, MAX_VENDAS_DIARIAS);
+
+        // Array para armazenar as vendas diárias
+        Venda vendas[vendasDiarias];
+
+        // Registro automático das vendas diárias
+        registrarVendasDiarias(vendas, vendasDiarias, precoRefeicao, qtdRefris, qtdQuentinhas);
+
+        // Relatório diário
+        relatorioDiario(vendas, vendasDiarias);
+
+        // Atualização do total mensal
+        for(int i = 0; i < vendasDiarias; i++) {
+            totalVendasMensais[mes] += vendas[i].preco;
+        }
+    }
+
+    // Relatório mensal
+    relatorioMensal(totalVendasMensais);
+
+    // Ordenação decrescente do total anual
+    ordenarDecrescente(totalVendasMensais, 12);
+
+    return 0;
+}
+
+// Implementação das funções
+void registrarVendasDiarias(Venda vendas[], int totalVendas, double precoRefeicao, int qtdRefris, int qtdQuentinhas) {
+    for(int i = 0; i < totalVendas; i++) {
+        vendas[i].tipo = REFEICAO;
+        vendas[i].peso = gerarPesoAleatorio(MIN_PESO_REFEICAO, MAX_PESO_REFEICAO);
+        vendas[i].preco = vendas[i].peso * precoRefeicao;
+    }
+    // Adiciona as quentinhas e refrigerantes ao final do array de vendas
+    if(qtdQuentinhas > 0) {
+        vendas[totalVendas - qtdQuentinhas].tipo = QUENTINHA;
+        vendas[totalVendas - qtdQuentinhas].preco = PRECO_QUENTINHA * qtdQuentinhas;
+        vendas[totalVendas - qtdQuentinhas].quantidade = qtdQuentinhas;
+    }
+    if(qtdRefris > 0) {
+        vendas[totalVendas - qtdRefris].tipo = BEBIDA;
+        // Suponha que o preço do refrigerante seja fixo, por exemplo, R$ 3,00
+        vendas[totalVendas - qtdRefris].preco = 3.00 * qtdRefris;
+        vendas[totalVendas - qtdRefris].quantidade = qtdRefris;
+    }
+}
+
+void relatorioDiario(Venda vendas[], int totalVendas) {
+    double totalDiario = 0;
+    printf("Relatório Diário de Vendas:\n");
+    for(int i = 0; i < totalVendas; i++) {
+        totalDiario += vendas[i].preco;
+        printf("Venda %d: R$ %.2f\n", i + 1, vendas[i].preco);
+    }
+    printf("Total diário: R$ %.2f\n", totalDiario);
+}
+
+void relatorioMensal(double totalMensal[]) {
+    printf("Relatório Mensal de Vendas:\n");
+    for(int i = 0; i < 12; i++) {
+        printf("Mês %d: R$ %.2f\n", i + 1, totalMensal[i]);
+    }
+}
+
+void ordenarDecrescente(double totalAnual[], int tamanho) {
+    for(int i = 0; i < tamanho - 1; i++) {
+        for(int j = i + 1; j < tamanho; j++) {
+            if(totalAnual[i] < totalAnual[j]) {
+                double temp = totalAnual[i];
+                totalAnual[i] = totalAnual[j];
+                totalAnual[j] = temp;
+            }
+        }
+    }
+    printf("Total Anual Ordenado Decrescentemente:\n");
+    for(int i = 0; i < tamanho; i++) {
+        printf("Mês %d: R$ %.2f\n", i + 1, totalAnual[i]);
+    }
+}
+
+double gerarPesoAleatorio(double min, double max) {
+    double range = (max - min); 
+    double div = RAND_MAX / range;
+    return min + (rand() / div);
+}
+
+int gerarNumeroAleatorio(int min, int max) {
+    return min + rand() % (max - min + 1);
+}
